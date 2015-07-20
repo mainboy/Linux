@@ -58,21 +58,21 @@ go:	mov	ax,cs     ! cs = 0x9000
 	mov	ds,ax     ! ds = 0x9000
 	mov	es,ax     ! es = 0x9000
 ! put stack at 0x9ff00.
-	mov	ss,ax
+	mov	ss,ax           ! ss:sp = 0x9000:0xff00
 	mov	sp,#0xFF00		! arbitrary value >>512
 
 ! load the setup-sectors directly after the bootblock.
 ! Note that 'es' is already set up.
 
 load_setup:
-	mov	dx,#0x0000		! drive 0, head 0
-	mov	cx,#0x0002		! sector 2, track 0
-	mov	bx,#0x0200		! address = 512, in INITSEG
-	mov	ax,#0x0200+SETUPLEN	! service 2, nr of sectors
-	int	0x13			! read it
+	mov	dx,#0x0000			! drive 0, head 0
+	mov	cx,#0x0002			! sector 2, track 0
+	mov	bx,#0x0200			! address = 512, in INITSEG
+	mov	ax,#0x0200+SETUPLEN	! service 2, nr of sectors, 
+	int	0x13				! read it, int 0x13 ah = 02: read sectors from drive
 	jnc	ok_load_setup		! ok - continue
-	mov	dx,#0x0000
-	mov	ax,#0x0000		! reset the diskette
+	mov	dx,#0x0000			! drive 0, head 0
+	mov	ax,#0x0000			! reset the diskette, int 0x13 ah = 00:reset disk drive
 	int	0x13
 	j	load_setup
 
@@ -80,24 +80,24 @@ ok_load_setup:
 
 ! Get disk drive parameters, specifically nr of sectors/track
 
-	mov	dl,#0x00
-	mov	ax,#0x0800		! AH=8 is get drive parameters
-	int	0x13
-	mov	ch,#0x00
-	seg cs
-	mov	sectors,cx
-	mov	ax,#INITSEG
-	mov	es,ax
+	mov	dl,#0x00        ! 0x0 ~ 0x7f表示软盘，0x80 ~ 0xff表示硬盘
+	mov	ax,#0x0800		! ah=8 is get drive parameters
+	int	0x13            ! int 0x13 ah=8:read drive parameters
+	mov	ch,#0x00        ! clear ch=0, get cx=cl=sectors/track
+	seg cs              ! use cs = 0x9000
+	mov	sectors,cx      ! get sectors/track
+	mov	ax,#INITSEG     
+	mov	es,ax           ! when return, es has changed
 
 ! Print some inane message
 
 	mov	ah,#0x03		! read cursor pos
-	xor	bh,bh
-	int	0x10
+	xor	bh,bh           ! bh=0:page number
+	int	0x10            ! int 0x10 ah=3:Get cursor position and shape
 	
-	mov	cx,#24
-	mov	bx,#0x0007		! page 0, attribute 7 (normal)
-	mov	bp,#msg1
+	mov	cx,#24          ! string length
+	mov	bx,#0x0007		! page 0, attribute 7 (normal), bh=0:page number, bl:color
+	mov	bp,#msg1        ! es:bp :Offset of string
 	mov	ax,#0x1301		! write string, move cursor
 	int	0x10
 

@@ -44,19 +44,19 @@ ROOT_DEV = 0x306
 
 entry _start
 _start:
-	mov	ax,#BOOTSEG
-	mov	ds,ax
+	mov	ax,#BOOTSEG   
+	mov	ds,ax         ! ds = 0x07c0
 	mov	ax,#INITSEG
-	mov	es,ax
-	mov	cx,#256
-	sub	si,si
-	sub	di,di
-	rep
+	mov	es,ax         ! es = 0x9000
+	mov	cx,#256       ! cx = 256
+	sub	si,si         ! si = 0
+	sub	di,di         ! di = 0
+	rep               ! while(cx!=0) { cx--; movw es:di ds:si}
 	movw
-	jmpi	go,INITSEG
-go:	mov	ax,cs
-	mov	ds,ax
-	mov	es,ax
+	jmpi	go,INITSEG ! jmpi(segment jump): cs:ip = INITSEG:go = 0x9000:go
+go:	mov	ax,cs     ! cs = 0x9000
+	mov	ds,ax     ! ds = 0x9000
+	mov	es,ax     ! es = 0x9000
 ! put stack at 0x9ff00.
 	mov	ss,ax
 	mov	sp,#0xFF00		! arbitrary value >>512

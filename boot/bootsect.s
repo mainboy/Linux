@@ -249,7 +249,7 @@ msg1:
 .org 508
 root_dev:
 	.word ROOT_DEV
-boot_flag:
+boot_flag:                   !bootsect's flag, if you don't have, you can't boot your system.
 	.word 0xAA55
 
 .text

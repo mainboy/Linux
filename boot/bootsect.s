@@ -114,16 +114,16 @@ ok_load_setup:
 ! Otherwise, either /dev/PS0 (2,28) or /dev/at0 (2,8), depending
 ! on the number of sectors that the BIOS reports currently.
 
-	seg cs
+	seg cs				! only confluent next instruction.
 	mov	ax,root_dev
 	cmp	ax,#0
-	jne	root_defined
+	jne	root_defined    ! jne = not equal
 	seg cs
 	mov	bx,sectors
-	mov	ax,#0x0208		! /dev/ps0 - 1.2Mb
+	mov	ax,#0x0208		! /dev/ps0 - 1.2Mb = 2 * 80 * 15 * 512B = 1200KB = 1.2MB
 	cmp	bx,#15
 	je	root_defined
-	mov	ax,#0x021c		! /dev/PS0 - 1.44Mb
+	mov	ax,#0x021c		! /dev/PS0 - 1.44Mb = 2 * 80 * 18 * 512B = 1440KB = 1.44MB
 	cmp	bx,#18
 	je	root_defined
 undef_root:
@@ -158,7 +158,7 @@ rp_read:
 	cmp ax,#ENDSEG		! have we loaded all yet?
 	jb ok1_read
 	ret
-ok1_read:
+ok1_read:               ! read sectors
 	seg cs
 	mov ax,sectors
 	sub ax,sread
@@ -168,7 +168,7 @@ ok1_read:
 	jnc ok2_read
 	je ok2_read
 	xor ax,ax
-	sub ax,bx
+	sub ax,bx           ! 16bit = 64KB; ax - bx = 64KB - bx
 	shr ax,#9
 ok2_read:
 	call read_track
